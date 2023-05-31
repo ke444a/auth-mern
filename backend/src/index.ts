@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./routes/auth";
+import usersRoutes from "./routes/users";
 dotenv.config({ path: "../.env" });
 
 const app = express();
@@ -18,7 +19,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use("/", authRoutes);
+app.use("/users", usersRoutes);
+app.use("/auth", authRoutes);
 
 mongoose.connect(MONGODB).then(() => {
     app.listen(PORT);

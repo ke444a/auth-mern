@@ -2,7 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 
 interface IState {
-    user: User | null;
+    user: IUser | null;
     accessToken: string;
 }
 

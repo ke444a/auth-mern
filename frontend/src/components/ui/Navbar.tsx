@@ -8,15 +8,17 @@ import Container from "@mui/material/Container";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { Link } from "react-router-dom";
 
-const pages = ["Home", "Logout"];
-const links = ["/home", "/logout"];
+const pages = ["Home", "Users", "Logout"];
+const links = ["/home", "/users", "/logout"];
 
 export const Navbar = () => {
     return (
         <AppBar position="static">
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                    <LockOutlinedIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
+                    <LockOutlinedIcon
+                        sx={{ display: { xs: "none", md: "flex" }, mr: 1 }}
+                    />
                     <Typography
                         variant="h6"
                         noWrap
@@ -45,12 +47,19 @@ export const Navbar = () => {
                             <MenuIcon />
                         </IconButton>
                         {pages.map((page, index) => (
-                            <Box component={Link} key={page} to={links[index]}>
+                            <Box
+                                component={Link}
+                                key={page}
+                                to={links[index]}
+                                sx={{ my: 2, color: "white", display: "block", mr: 3 }}
+                            >
                                 <Typography textAlign="center">{page}</Typography>
                             </Box>
                         ))}
                     </Box>
-                    <LockOutlinedIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
+                    <LockOutlinedIcon
+                        sx={{ display: { xs: "flex", md: "none" }, mr: 1 }}
+                    />
                     <Typography
                         variant="h5"
                         noWrap

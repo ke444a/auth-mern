@@ -8,21 +8,41 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../services/auth";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../app/store";
 import { setCredentials } from "../features/auth/authSlice";
+import { useState } from "react";
+import { useRegisterMutation } from "../features/auth/authApiSlice";
 
 export const Register = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
+    const [formData, setFormData] = useState<IForm>({
+        username: "",
+        password: "",
+        firstName: "",
+        lastName: ""
+    });
+    const [register] = useRegisterMutation();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const result = await registerUser(formData);
-        dispatch(setCredentials({ user: result.user, accessToken: result.accessToken }));
-        navigate("/");    
+        try {
+            const result = await register({
+                username: formData.username,
+                password: formData.password,
+                firstName: formData.firstName,
+                lastName: formData.lastName
+            }).unwrap();
+            dispatch(setCredentials({user: result.user, accessToken: result.accessToken}));
+            navigate("/");
+        } catch (error) {
+            if (error instanceof Error) {
+                console.log(error.message);
+            } else {
+                console.log(error);
+            }
+        }
     };
 
     return (
@@ -58,6 +78,8 @@ export const Register = () => {
                                 id="firstName"
                                 label="First Name"
                                 autoFocus
+                                value={formData.firstName}
+                                onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -68,6 +90,8 @@ export const Register = () => {
                                 label="Last Name"
                                 name="lastName"
                                 autoComplete="family-name"
+                                value={formData.lastName}
+                                onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -77,6 +101,9 @@ export const Register = () => {
                                 label="Username"
                                 name="username"
                                 autoComplete="username"
+                                value={formData.username}
+                                onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
+
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -88,6 +115,8 @@ export const Register = () => {
                                 type="password"
                                 id="password"
                                 autoComplete="new-password"
+                                value={formData.password}
+                                onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                             />
                         </Grid>
                     </Grid>

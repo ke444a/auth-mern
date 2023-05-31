@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import User, { IUser } from "../models/User";
 
 interface AuthRequest extends Request {
-    user: IUser | null;
+    user?: IUser | null;
 }
 
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {

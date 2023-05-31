@@ -10,24 +10,34 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../services/auth";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../app/store";
 import { setCredentials } from "../features/auth/authSlice";
+import { useLoginMutation } from "../features/auth/authApiSlice";
 
 export const Login = () => {
-    const [username, setUsername] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
+    const [formData, setFormData] = useState<IForm>({
+        username: "",
+        password: ""
+    });
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
+    const [login] = useLoginMutation();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const result = await loginUser(formData);
-        dispatch(setCredentials({ user: result.user, accessToken: result.accessToken }));
-        navigate("/");
+        try {
+            const result = await login({ username: formData.username, password: formData.password }).unwrap();
+            dispatch(setCredentials({ user: result.user, accessToken: result.accessToken }));
+            navigate("/");
+        } catch (error) {
+            if (error instanceof Error) {
+                console.log(error.message);
+            } else {
+                console.log(error);
+            }
+        }
     };
 
     return (
@@ -61,8 +71,8 @@ export const Login = () => {
                         name="username"
                         autoComplete="username"
                         autoFocus
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={formData.username}
+                        onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                     />
                     <TextField
                         margin="normal"
@@ -72,8 +82,8 @@ export const Login = () => {
                         label="Password"
                         type="password"
                         autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={formData.password}
+                        onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                     />
                     <FormControlLabel
                         control={<Checkbox value="remember" color="primary" />}

@@ -29,7 +29,7 @@ export const register = async (req: Request, res: Response) => {
             password: hashedPassword
         });
         const refreshToken = generateJWT(newUser._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "1m");
+        const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
         newUser.refreshToken = refreshToken;
         await newUser.save();
 
@@ -66,7 +66,7 @@ export const login = async (req: Request, res: Response) => {
 
     try {
         const refreshToken = generateJWT(user._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "1m");
+        const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
 
         user.refreshToken = refreshToken;
         const loginUser = await user.save();
@@ -106,4 +106,30 @@ export const logout = async (req: Request, res: Response) => {
             res.status(400).json({ message: "Unknown error" });
         }
     }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+    const cookies = req.cookies;
+    if (!cookies?.jwt) {
+        return res.status(401).json({ message: "No refresh token" });
+    }
+
+    const refreshToken = cookies.jwt;
+    const foundUser = await User.findOne({ refreshToken });
+    if (!foundUser) {
+        return res.status(401).json({ message: "No user with given refresh token" });
+    }
+
+    jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET || "",
+        (err: Error | null, decoded: any) => {
+            if (err) {
+                return res.status(403).json({ message: err.message });
+            }
+
+            const accessToken = generateJWT(decoded.id, process.env.ACCESS_TOKEN_SECRET || "", "5s");
+            res.status(201).json({ accessToken });
+        }
+    );
 };

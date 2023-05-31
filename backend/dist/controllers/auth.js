@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.login = exports.register = void 0;
+exports.refreshToken = exports.logout = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const User_1 = __importDefault(require("../models/User"));
@@ -43,7 +43,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const hashedPassword = yield bcrypt_1.default.hash(userToRegister.password, 10);
         const newUser = new User_1.default(Object.assign(Object.assign({}, userToRegister), { password: hashedPassword }));
         const refreshToken = generateJWT(newUser._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "1m");
+        const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
         newUser.refreshToken = refreshToken;
         yield newUser.save();
         const _a = newUser.toObject(), { password } = _a, newUserWithoutPassword = __rest(_a, ["password"]);
@@ -78,7 +78,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     try {
         const refreshToken = generateJWT(user._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "1m");
+        const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
         user.refreshToken = refreshToken;
         const loginUser = yield user.save();
         res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
@@ -121,3 +121,22 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.logout = logout;
+const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const cookies = req.cookies;
+    if (!(cookies === null || cookies === void 0 ? void 0 : cookies.jwt)) {
+        return res.status(401).json({ message: "No refresh token" });
+    }
+    const refreshToken = cookies.jwt;
+    const foundUser = yield User_1.default.findOne({ refreshToken });
+    if (!foundUser) {
+        return res.status(401).json({ message: "No user with given refresh token" });
+    }
+    jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || "", (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ message: err.message });
+        }
+        const accessToken = generateJWT(decoded.id, process.env.ACCESS_TOKEN_SECRET || "", "5s");
+        res.status(201).json({ accessToken });
+    });
+});
+exports.refreshToken = refreshToken;
