@@ -21,7 +21,7 @@ const Home = () => {
                     </Typography>
                     <List>
                         <ListItem>
-                            <ListItemText primary={`Username: ${user?.username}`} />
+                            <ListItemText primary={`Email: ${user?.email}`} />
                         </ListItem>
                         <ListItem>
                             <ListItemText primary={`First Name: ${user?.firstName}`} />

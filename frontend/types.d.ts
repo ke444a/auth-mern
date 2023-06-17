@@ -1,6 +1,6 @@
 interface IUser {
     _id: string;
-    username: string;
+    email: string;
     password: string;
     firstName: string;
     lastName: string;
@@ -8,7 +8,7 @@ interface IUser {
 }
 
 interface IForm {
-    username?: string;
+    email?: string;
     password?: string;
     firstName?: string;
     lastName?: string;

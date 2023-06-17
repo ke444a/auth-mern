@@ -9,5 +9,8 @@
     "concurrently": "^8.0.1",
     "eslint": "^8.41.0",
     "eslint-plugin-react": "^7.32.2"
+  },
+  "dependencies": {
+    "react-toastify": "^9.1.3"
   }
 }

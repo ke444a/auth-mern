@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User, { IUser } from "../models/User";
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
     user?: IUser | null;
 }
 

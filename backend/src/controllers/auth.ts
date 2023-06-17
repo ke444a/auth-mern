@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import User, { IUser } from "../models/User";
+import nodemailer from "nodemailer";
 
 const generateJWT = (userId: string, TOKEN_SECRET: string, expiryTime: string) => {
     return jwt.sign(
@@ -13,13 +14,13 @@ const generateJWT = (userId: string, TOKEN_SECRET: string, expiryTime: string) =
 
 export const register = async (req: Request, res: Response) => {
     const userToRegister: IUser = req.body;
-    if (!userToRegister.username || !userToRegister.password) {
-        return res.status(400).json({ message: "Username and password are required"});
+    if (!userToRegister.email || !userToRegister.password) {
+        return res.status(400).json({ message: "Email and password are required"});
     }
 
-    const existingUser = await User.findOne({ username: userToRegister.username });
+    const existingUser = await User.findOne({ email: userToRegister.email });
     if (existingUser) {
-        return res.status(400).json({ message: "User with given username already exists" });
+        return res.status(400).json({ message: "User with given email already exists" });
     }
 
     try {
@@ -49,14 +50,14 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (!user) {
-        return res.status(404).json({ message: "Invalid username" });
+        return res.status(404).json({ message: "Invalid email" });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -130,6 +131,75 @@ export const refreshToken = async (req: Request, res: Response) => {
 
             const accessToken = generateJWT(decoded.id, process.env.ACCESS_TOKEN_SECRET || "", "5s");
             res.status(201).json({ accessToken });
+        }
+    );
+};
+
+export const sendResetPasswordEmail = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(400).json({ message: "User with given email is not found" });
+    }
+
+    const resetToken = generateJWT(user.id, process.env.RESET_TOKEN_SECRET || "", "15m");
+    const transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        auth: {
+            user: process.env.ETHEREAL_USER,
+            pass: process.env.ETHEREAL_PASSWORD
+        }
+    });
+    const mailOptions = {
+        from: "alene.kozey@ethereal.email",
+        to: email,
+        subject: "Password Reset",
+        html: `
+            <p>Hello,</p>
+            <p>You have requested to reset your password. Please click the link below to reset it within next 15 minutes: </p>
+            <a href="http://localhost:5173/reset-password?token=${resetToken}">Reset Password</a>
+            <p>If you didn't request this, please ignore this email.</p>
+        `
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            res.status(500).json({ message: "Error sending email" });
+        } else {
+            console.log(nodemailer.getTestMessageUrl(info));
+            res.status(200).json({ message: "Email sent successfully" });
+        }
+    });
+};
+
+
+export const resetPassword = async (req: Request, res: Response) => {
+    const { password } = req.body;
+    const resetToken = req.query.token;
+
+    jwt.verify(
+        resetToken as string, 
+        process.env.RESET_TOKEN_SECRET || "",
+        async (err: Error | null, decoded: any) => {
+            if (err) {
+                return res.status(403).json({ message: err.message });
+            }
+
+            const user = await User.findById(decoded.id);
+            if (!user) {
+                return res.status(400).json({ message: "User with given reset token is not found" });
+            }
+            const cookies = req.cookies;
+            if (cookies?.jwt) {
+                res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
+            }
+            user.refreshToken = ""; 
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+            user.password = hashedPassword;
+            user.resetToken = "";
+            await user.save();
+            res.status(200).json({ message: "Password changed successfully" });
         }
     );
 };

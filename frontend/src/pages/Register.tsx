@@ -1,6 +1,5 @@
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
@@ -18,7 +17,7 @@ export const Register = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const [formData, setFormData] = useState<IForm>({
-        username: "",
+        email: "",
         password: "",
         firstName: "",
         lastName: ""
@@ -29,7 +28,7 @@ export const Register = () => {
         event.preventDefault();
         try {
             const result = await register({
-                username: formData.username,
+                email: formData.email,
                 password: formData.password,
                 firstName: formData.firstName,
                 lastName: formData.lastName
@@ -47,7 +46,6 @@ export const Register = () => {
 
     return (
         <Container component="main" maxWidth="xs">
-            <CssBaseline />
             <Box
                 sx={{
                     marginTop: 8,
@@ -98,10 +96,10 @@ export const Register = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Username"
-                                name="username"
-                                autoComplete="username"
-                                value={formData.username}
+                                label="Email"
+                                name="email"
+                                autoComplete="email"
+                                value={formData.email}
                                 onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
 
                             />

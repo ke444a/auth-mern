@@ -1,9 +1,6 @@
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -16,9 +13,9 @@ import { AppDispatch } from "../app/store";
 import { setCredentials } from "../features/auth/authSlice";
 import { useLoginMutation } from "../features/auth/authApiSlice";
 
-export const Login = () => {
+const Login = () => {
     const [formData, setFormData] = useState<IForm>({
-        username: "",
+        email: "",
         password: ""
     });
     const dispatch = useDispatch<AppDispatch>();
@@ -27,22 +24,13 @@ export const Login = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        try {
-            const result = await login({ username: formData.username, password: formData.password }).unwrap();
-            dispatch(setCredentials({ user: result.user, accessToken: result.accessToken }));
-            navigate("/");
-        } catch (error) {
-            if (error instanceof Error) {
-                console.log(error.message);
-            } else {
-                console.log(error);
-            }
-        }
+        const result = await login({ email: formData.email, password: formData.password }).unwrap();
+        dispatch(setCredentials({ user: result.user, accessToken: result.accessToken }));
+        navigate("/");
     };
 
     return (
         <Container component="main" maxWidth="xs">
-            <CssBaseline />
             <Box
                 sx={{
                     marginTop: 8,
@@ -67,11 +55,11 @@ export const Login = () => {
                         margin="normal"
                         required
                         fullWidth
-                        label="Username"
-                        name="username"
-                        autoComplete="username"
+                        label="Email"
+                        name="email"
+                        autoComplete="email"
                         autoFocus
-                        value={formData.username}
+                        value={formData.email}
                         onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                     />
                     <TextField
@@ -85,10 +73,6 @@ export const Login = () => {
                         value={formData.password}
                         onChange={(e) => setFormData(prevData => ({...prevData, [e.target.name]: e.target.value}))}
                     />
-                    <FormControlLabel
-                        control={<Checkbox value="remember" color="primary" />}
-                        label="Remember me"
-                    />
                     <Button
                         type="submit"
                         fullWidth
@@ -99,7 +83,7 @@ export const Login = () => {
                     </Button>
                     <Grid container>
                         <Grid item xs>
-                            <Box component={Link} to="/">
+                            <Box component={Link} to="/forgot-password">
                   Forgot password?
                             </Box>
                         </Grid>

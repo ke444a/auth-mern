@@ -1,27 +1,33 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Logout from "./pages/Logout";
 import Home from "./pages/Home";
-import { CssBaseline } from "@mui/material";
+import CssBaseline from "@mui/material/CssBaseline";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
-import UsersList from "./pages/UsersList";
+import Admin from "./pages/Admin";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
-    const location = useLocation();
-
     return (
         <>
+            <ToastContainer 
+                autoClose={3000}
+            />
             <CssBaseline />
-            {location.pathname === "/" && <Navigate to="/home" replace />}
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/logout" element={<Logout />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/users" element={<UsersList />} />
+                    <Route path="/" element={<Home />} />
+                    <Route path="/admin" element={<Admin />} />
                 </Route>
             </Routes>
         </>
