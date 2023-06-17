@@ -16,23 +16,15 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         return res.status(401).json({ message: "Authorization token is required" });
     }
 
-    try {
-        jwt.verify(
-            accessToken,
-            process.env.ACCESS_TOKEN_SECRET || "",
-            async (err, decoded) => {
-                if (err) {
-                    return res.status(403).json({ message: "Invalid token" });
-                }
-                req.user = await User.findById((decoded as JwtPayload)?.id).select("-password");
-                next();
+    jwt.verify(
+        accessToken,
+        process.env.ACCESS_TOKEN_SECRET || "",
+        async (err, decoded) => {
+            if (err) {
+                return res.status(403).json({ message: "Invalid token" });
             }
-        );
-    } catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(400).json({ message: "Unknown error" });
+            req.user = await User.findById((decoded as JwtPayload)?.id).select("-password");
+            next();
         }
-    }
+    );
 };

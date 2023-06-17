@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./routes/auth";
 import usersRoutes from "./routes/users";
+import { errorMiddleware } from "./middleware/errorMiddleware";
 dotenv.config({ path: "../.env" });
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use("/users", usersRoutes);
 app.use("/auth", authRoutes);
+app.use(errorMiddleware);
 
 mongoose.connect(MONGODB).then(() => {
     app.listen(PORT);

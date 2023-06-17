@@ -23,30 +23,22 @@ export const register = async (req: Request, res: Response) => {
         return res.status(400).json({ message: "User with given email already exists" });
     }
 
-    try {
-        const hashedPassword = await bcrypt.hash(userToRegister.password, 10);
-        const newUser = new User<IUser>({
-            ...userToRegister,
-            password: hashedPassword
-        });
-        const refreshToken = generateJWT(newUser._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
-        newUser.refreshToken = refreshToken;
-        await newUser.save();
+    const hashedPassword = await bcrypt.hash(userToRegister.password, 10);
+    const newUser = new User<IUser>({
+        ...userToRegister,
+        password: hashedPassword
+    });
+    const refreshToken = generateJWT(newUser._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
+    const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
+    newUser.refreshToken = refreshToken;
+    await newUser.save();
 
-        const { password, ...newUserWithoutPassword } = newUser.toObject();
-        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24*60*60*1000 });
-        res.status(201).json({
-            user: newUserWithoutPassword,
-            accessToken
-        });
-    } catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+    const { password, ...newUserWithoutPassword } = newUser.toObject();
+    res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24*60*60*1000 });
+    res.status(201).json({
+        user: newUserWithoutPassword,
+        accessToken
+    });
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -65,48 +57,34 @@ export const login = async (req: Request, res: Response) => {
         return res.status(400).json({ message: "Invalid password" });
     }
 
-    try {
-        const refreshToken = generateJWT(user._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
+    const refreshToken = generateJWT(user._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
+    const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
 
-        user.refreshToken = refreshToken;
-        const loginUser = await user.save();
-        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24*60*60*1000 });
-        res.status(200).json({ user: loginUser, accessToken });
-    } catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+    user.refreshToken = refreshToken;
+    const loginUser = await user.save();
+    res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24*60*60*1000 });
+    res.status(200).json({ user: loginUser, accessToken });
+
 };
 
 export const logout = async (req: Request, res: Response) => {
-    try {
-        const cookies = req.cookies;
-        if (!cookies?.jwt) {
-            return res.status(200).json({ message: "Logged out"});
-        }
+    const cookies = req.cookies;
+    if (!cookies?.jwt) {
+        return res.status(200).json({ message: "Logged out"});
+    }
 
-        const refreshToken = cookies.jwt;
-        const logoutUser = await User.findOne({ refreshToken });
-        if (!logoutUser) {
-            res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
-            return res.status(200).json({ message: "Logged out"});
-        }
-
-        logoutUser.refreshToken = "";
-        await logoutUser.save();
+    const refreshToken = cookies.jwt;
+    const logoutUser = await User.findOne({ refreshToken });
+    if (!logoutUser) {
         res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
         return res.status(200).json({ message: "Logged out"});
-    } catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(400).json({ message: "Unknown error" });
-        }
     }
+
+    logoutUser.refreshToken = "";
+    await logoutUser.save();
+    res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
+    return res.status(200).json({ message: "Logged out"});
+
 };
 
 export const refreshToken = async (req: Request, res: Response) => {
