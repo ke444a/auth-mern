@@ -20,12 +20,8 @@ export const authApiSlice = apiSlice.injectEndpoints({
         logout: builder.query<void, void>({
             query: () => "/auth/logout",
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                try {
-                    await queryFulfilled;
-                    dispatch(logout());
-                } catch (error) {
-                    console.log(error);
-                }
+                await queryFulfilled;
+                dispatch(logout());
             }
         }),
         sendResetPasswordEmail: builder.mutation({
@@ -37,7 +33,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
         }),
         resetPassword: builder.mutation({
             query: ({ token, password }) => ({
-                url: `/auth/reset-password/?token=${token}`,
+                url: `/auth/reset-password/${token}`,
                 method: "POST",
                 body: { password }
             })

@@ -24,7 +24,7 @@ const Login = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const result = await login({ email: formData.email, password: formData.password }).unwrap();
+        const result = await login(formData).unwrap();
         dispatch(setCredentials({ user: result.user, accessToken: result.accessToken }));
         navigate("/");
     };

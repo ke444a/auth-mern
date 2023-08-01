@@ -13,7 +13,7 @@ import { setCredentials } from "../features/auth/authSlice";
 import { useState } from "react";
 import { useRegisterMutation } from "../features/auth/authApiSlice";
 
-export const Register = () => {
+const Register = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const [formData, setFormData] = useState<IForm>({
@@ -26,22 +26,9 @@ export const Register = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        try {
-            const result = await register({
-                email: formData.email,
-                password: formData.password,
-                firstName: formData.firstName,
-                lastName: formData.lastName
-            }).unwrap();
-            dispatch(setCredentials({user: result.user, accessToken: result.accessToken}));
-            navigate("/");
-        } catch (error) {
-            if (error instanceof Error) {
-                console.log(error.message);
-            } else {
-                console.log(error);
-            }
-        }
+        const result = await register(formData).unwrap();
+        dispatch(setCredentials({user: result.user, accessToken: result.accessToken}));
+        navigate("/");
     };
 
     return (

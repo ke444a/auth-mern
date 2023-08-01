@@ -24,22 +24,12 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     if (!accessToken) {
         return res.status(401).json({ message: "Authorization token is required" });
     }
-    try {
-        jsonwebtoken_1.default.verify(accessToken, process.env.ACCESS_TOKEN_SECRET || "", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
-            if (err) {
-                return res.status(403).json({ message: "Invalid token" });
-            }
-            req.user = yield User_1.default.findById(decoded === null || decoded === void 0 ? void 0 : decoded.id).select("-password");
-            next();
-        }));
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
+    jsonwebtoken_1.default.verify(accessToken, process.env.ACCESS_TOKEN_SECRET || "", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            return res.status(403).json({ message: "Invalid token" });
         }
-        else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+        req.user = yield User_1.default.findById(decoded === null || decoded === void 0 ? void 0 : decoded.id).select("-password");
+        next();
+    }));
 });
 exports.authMiddleware = authMiddleware;

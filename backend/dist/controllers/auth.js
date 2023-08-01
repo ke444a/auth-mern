@@ -40,28 +40,18 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (existingUser) {
         return res.status(400).json({ message: "User with given email already exists" });
     }
-    try {
-        const hashedPassword = yield bcrypt_1.default.hash(userToRegister.password, 10);
-        const newUser = new User_1.default(Object.assign(Object.assign({}, userToRegister), { password: hashedPassword }));
-        const refreshToken = generateJWT(newUser._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
-        newUser.refreshToken = refreshToken;
-        yield newUser.save();
-        const _a = newUser.toObject(), { password } = _a, newUserWithoutPassword = __rest(_a, ["password"]);
-        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
-        res.status(201).json({
-            user: newUserWithoutPassword,
-            accessToken
-        });
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        }
-        else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+    const hashedPassword = yield bcrypt_1.default.hash(userToRegister.password, 10);
+    const newUser = new User_1.default(Object.assign(Object.assign({}, userToRegister), { password: hashedPassword }));
+    const refreshToken = generateJWT(newUser._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
+    const accessToken = generateJWT(newUser._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
+    newUser.refreshToken = refreshToken;
+    yield newUser.save();
+    const _a = newUser.toObject(), { password } = _a, newUserWithoutPassword = __rest(_a, ["password"]);
+    res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
+    res.status(201).json({
+        user: newUserWithoutPassword,
+        accessToken
+    });
 });
 exports.register = register;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -77,49 +67,29 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!isPasswordCorrect) {
         return res.status(400).json({ message: "Invalid password" });
     }
-    try {
-        const refreshToken = generateJWT(user._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
-        const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
-        user.refreshToken = refreshToken;
-        const loginUser = yield user.save();
-        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
-        res.status(200).json({ user: loginUser, accessToken });
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        }
-        else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+    const refreshToken = generateJWT(user._id.toString(), process.env.REFRESH_TOKEN_SECRET || "", "1d");
+    const accessToken = generateJWT(user._id.toString(), process.env.ACCESS_TOKEN_SECRET || "", "5s");
+    user.refreshToken = refreshToken;
+    const loginUser = yield user.save();
+    res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
+    res.status(200).json({ user: loginUser, accessToken });
 });
 exports.login = login;
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const cookies = req.cookies;
-        if (!(cookies === null || cookies === void 0 ? void 0 : cookies.jwt)) {
-            return res.status(200).json({ message: "Logged out" });
-        }
-        const refreshToken = cookies.jwt;
-        const logoutUser = yield User_1.default.findOne({ refreshToken });
-        if (!logoutUser) {
-            res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
-            return res.status(200).json({ message: "Logged out" });
-        }
-        logoutUser.refreshToken = "";
-        yield logoutUser.save();
+    const cookies = req.cookies;
+    if (!(cookies === null || cookies === void 0 ? void 0 : cookies.jwt)) {
+        return res.status(200).json({ message: "Logged out" });
+    }
+    const refreshToken = cookies.jwt;
+    const logoutUser = yield User_1.default.findOne({ refreshToken });
+    if (!logoutUser) {
         res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
         return res.status(200).json({ message: "Logged out" });
     }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        }
-        else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+    logoutUser.refreshToken = "";
+    yield logoutUser.save();
+    res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
+    return res.status(200).json({ message: "Logged out" });
 });
 exports.logout = logout;
 const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -156,7 +126,7 @@ const sendResetPasswordEmail = (req, res) => __awaiter(void 0, void 0, void 0, f
             pass: process.env.ETHEREAL_PASSWORD
         }
     });
-    const mailOptions = {
+    const mailData = {
         from: "alene.kozey@ethereal.email",
         to: email,
         subject: "Password Reset",
@@ -167,19 +137,21 @@ const sendResetPasswordEmail = (req, res) => __awaiter(void 0, void 0, void 0, f
             <p>If you didn't request this, please ignore this email.</p>
         `
     };
-    transporter.sendMail(mailOptions, (error, info) => {
+    transporter.sendMail(mailData, (error, info) => {
         if (error) {
             res.status(500).json({ message: "Error sending email" });
         }
         else {
-            console.log(nodemailer_1.default.getTestMessageUrl(info));
-            res.status(200).json({ message: "Email sent successfully" });
+            res.status(200).json({ message: nodemailer_1.default.getTestMessageUrl(info) });
         }
     });
 });
 exports.sendResetPasswordEmail = sendResetPasswordEmail;
 const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { password } = req.body;
+    if (!password) {
+        return res.status(400).json({ message: "New password is required" });
+    }
     const resetToken = req.query.token;
     jsonwebtoken_1.default.verify(resetToken, process.env.RESET_TOKEN_SECRET || "", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
         if (err) {
@@ -187,7 +159,7 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         const user = yield User_1.default.findById(decoded.id);
         if (!user) {
-            return res.status(400).json({ message: "User with given reset token is not found" });
+            return res.status(400).json({ message: "User is not found" });
         }
         const cookies = req.cookies;
         if (cookies === null || cookies === void 0 ? void 0 : cookies.jwt) {
@@ -196,7 +168,6 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         user.refreshToken = "";
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         user.password = hashedPassword;
-        user.resetToken = "";
         yield user.save();
         res.status(200).json({ message: "Password changed successfully" });
     }));

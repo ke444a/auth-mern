@@ -15,17 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllUsers = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const users = yield User_1.default.find();
-        res.status(200).json(users);
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
-        }
-        else {
-            res.status(400).json({ message: "Unknown error" });
-        }
-    }
+    const users = yield User_1.default.find();
+    res.status(200).json(users);
 });
 exports.getAllUsers = getAllUsers;

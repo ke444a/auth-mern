@@ -7,7 +7,6 @@ export interface IUser {
     lastName: string;
     role: "admin" | "user";
     refreshToken: string;
-    resetToken?: string;
 }
 
 const userSchema = new Schema<IUser>({
@@ -16,8 +15,7 @@ const userSchema = new Schema<IUser>({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     role: { type: String, enum: ["admin", "user"], default: "user" },
-    refreshToken: String,
-    resetToken: String
+    refreshToken: String
 });
 
 export default model<IUser>("User", userSchema);

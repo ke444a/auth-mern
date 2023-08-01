@@ -5,19 +5,21 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import InputLabel from "@mui/material/InputLabel";
+import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
 import { useState } from "react";
 import { useSendResetPasswordEmailMutation } from "../features/auth/authApiSlice";
-import { toast } from "react-toastify";
 
 const ForgotPassword = () => {
     const [emailToReset, setEmailToReset] = useState<string>("");
     const [sendResetPasswordEmail] = useSendResetPasswordEmailMutation();
+    const [emailLink, setEmailLink] = useState<string>("");
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const result = await sendResetPasswordEmail(emailToReset).unwrap();
         if (!result.isError) {
-            toast.success(result.message);
+            setEmailLink(result.message);
         }
     };
 
@@ -25,7 +27,7 @@ const ForgotPassword = () => {
         <Container component="main" maxWidth="xs">
             <Box
                 sx={{
-                    marginTop: 8,
+                    marginY: 8,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -64,6 +66,11 @@ const ForgotPassword = () => {
                     </Button>
                 </Box>
             </Box>
+            {emailLink && (
+                <Typography variant="h5">
+                    <Link href={emailLink}>View the email</Link>
+                </Typography>
+            )}
         </Container>
     );
 };
