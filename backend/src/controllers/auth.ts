@@ -35,7 +35,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         await newUser.save();
     
         const { password, ...newUserWithoutPassword } = newUser.toObject();
-        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24*60*60*1000 });
+        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "strict", maxAge: 24*60*60*1000 });
         res.status(201).json({
             user: newUserWithoutPassword,
             accessToken
@@ -67,7 +67,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     
         user.refreshToken = refreshToken;
         const loginUser = await user.save();
-        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "none", maxAge: 24*60*60*1000 });
+        res.cookie("jwt", refreshToken, { httpOnly: true, secure: true, sameSite: "strict", maxAge: 24*60*60*1000 });
         res.status(200).json({ user: loginUser, accessToken });
     } catch (error) {
         next(error);
@@ -84,13 +84,13 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
         const refreshToken = cookies.jwt;
         const logoutUser = await User.findOne({ refreshToken });
         if (!logoutUser) {
-            res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
+            res.clearCookie("204", { httpOnly: true, sameSite: "strict", secure: true });
             return res.status(200).json({ message: "Logged out"});
         }
     
         logoutUser.refreshToken = "";
         await logoutUser.save();
-        res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
+        res.clearCookie("204", { httpOnly: true, sameSite: "strict", secure: true });
         return res.status(200).json({ message: "Logged out"});
     } catch (error) {
         next(error);
@@ -190,7 +190,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
                 }
                 const cookies = req.cookies;
                 if (cookies?.jwt) {
-                    res.clearCookie("204", { httpOnly: true, sameSite: "none", secure: true });
+                    res.clearCookie("204", { httpOnly: true, sameSite: "strict", secure: true });
                 }
                 user.refreshToken = ""; 
     
